@@ -1,0 +1,43 @@
+{
+ "mods":[
+  {"id":"ag","icon":"🤖","name":"AI agents","sub":"Are agents really transacting on-chain?"},
+  {"id":"st","icon":"💵","name":"Stablecoins","sub":"Real economic activity on Ethereum"},
+  {"id":"tk","icon":"🏦","name":"Tokenisation","sub":"Institutional adoption"},
+  {"id":"vc","icon":"🔥","name":"ETH value capture","sub":"Does adoption reach ETH holders?"},
+  {"id":"in","icon":"📈","name":"Institutional demand","sub":"Spot ETF flows & holdings"},
+  {"id":"cp","icon":"⚔️","name":"Competition","sub":"Solana, other L1s, Ethereum L2s"},
+  {"id":"bm","icon":"🏢","name":"BMNR fundamentals","sub":"Is BMNR benefiting from ETH?"}
+ ],
+ "metrics":[
+  {"id":"p1","mod":"ctx","name":"ETH price","div":1,"p":"$","s":"","d":0,"gd":1,"src":"CoinGecko"},
+  {"id":"p2","mod":"ctx","name":"ETH circulating supply","div":1,"p":"","s":"","d":0,"gd":1,"src":"CoinGecko"},
+  {"id":"b4","mod":"ctx","name":"BMNR diluted shares (M)","div":1,"p":"","s":"M","d":1,"gd":-1,"src":"manual"},
+  {"id":"b5","mod":"ctx","name":"BMNR share price","div":1,"p":"$","s":"","d":2,"gd":1,"src":"manual"},
+
+  {"id":"a1","mod":"ag","name":"Agent payments / day","div":1,"p":"","s":"","d":0,"gd":1,"src":"manual"},
+  {"id":"a2","mod":"ag","name":"Registered agent wallets","div":1,"p":"","s":"","d":0,"gd":1,"src":"manual"},
+
+  {"id":"s1","mod":"st","name":"Stablecoin supply (all chains)","div":1e9,"p":"$","s":"B","d":1,"gd":1,"op":"<","val":250,"src":"DefiLlama"},
+  {"id":"s2","mod":"st","name":"Ethereum share of supply","div":1,"p":"","s":"%","d":1,"gd":1,"op":"<","val":45,"src":"DefiLlama"},
+  {"id":"s3","mod":"st","name":"Stablecoins on Ethereum","div":1e9,"p":"$","s":"B","d":1,"gd":1,"src":"DefiLlama"},
+
+  {"id":"t1","mod":"tk","name":"Tokenised RWA TVL on Ethereum","div":1e9,"p":"$","s":"B","d":2,"gd":1,"src":"DefiLlama (builds daily)"},
+  {"id":"t2","mod":"tk","name":"Ethereum share of RWA TVL","div":1,"p":"","s":"%","d":1,"gd":1,"op":"<","val":40,"src":"DefiLlama (builds daily)"},
+
+  {"id":"v1","mod":"vc","name":"Ethereum network fees / day","div":1e6,"p":"$","s":"M","d":2,"gd":1,"src":"DefiLlama"},
+  {"id":"v2","mod":"vc","name":"Staked ETH share of supply","div":1,"p":"","s":"%","d":1,"gd":1,"src":"beaconcha.in + CoinGecko"},
+  {"id":"v3","mod":"vc","name":"Net supply growth (annualised)","div":1,"p":"","s":"%","d":2,"gd":-1,"op":">","val":1.5,"src":"computed (needs 7+ days)"},
+
+  {"id":"i1","mod":"in","name":"US spot ETH ETF net flow / day","div":1e6,"p":"$","s":"M","d":0,"gd":1,"op":"<","val":-250,"src":"manual"},
+  {"id":"i2","mod":"in","name":"Reported institutional ETH holdings","div":1e6,"p":"","s":"M ETH","d":2,"gd":1,"src":"manual"},
+
+  {"id":"c1","mod":"cp","name":"Solana stablecoin supply","div":1e9,"p":"$","s":"B","d":1,"gd":-1,"src":"DefiLlama"},
+  {"id":"c2","mod":"cp","name":"Ethereum share of DeFi TVL","div":1,"p":"","s":"%","d":1,"gd":1,"op":"<","val":50,"src":"DefiLlama"},
+  {"id":"c3","mod":"cp","name":"Ethereum L2 TVL","div":1e9,"p":"$","s":"B","d":1,"gd":1,"src":"DefiLlama (builds daily)"},
+  {"id":"c4","mod":"cp","name":"Solana DEX volume vs Ethereum","div":1,"p":"","s":"%","d":0,"gd":-1,"op":">","val":100,"src":"DefiLlama (builds daily)"},
+
+  {"id":"b1","mod":"bm","name":"BMNR ETH holdings","div":1e6,"p":"","s":"M ETH","d":3,"gd":1,"src":"manual"},
+  {"id":"b2","mod":"bm","name":"ETH per 1,000 diluted shares","div":1,"p":"","s":"","d":3,"gd":1,"src":"computed"},
+  {"id":"b3","mod":"bm","name":"mNAV","div":1,"p":"","s":"x","d":2,"gd":1,"op":"<","val":1,"src":"computed"}
+ ]
+}

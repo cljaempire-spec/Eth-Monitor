@@ -1,0 +1,4 @@
+{
+ "_help": "Enter values in DISPLAY units, one [date, value] pair per update, oldest first, e.g. [\"2026-10-09\", 85]. i1 = ETF net flow in $M that day; i2 = institutional ETH in millions; b1 = BMNR ETH holdings in millions; b4 = BMNR diluted shares in millions; b5 = BMNR share price in $; a1/a2 = agent stats from whichever source you trust. Everything stays empty until you add real numbers.",
+ "series": { "a1": [], "a2": [], "i1": [], "i2": [], "b1": [], "b4": [], "b5": [] }
+}

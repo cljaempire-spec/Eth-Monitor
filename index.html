@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ETH Thesis Monitor</title>
+<style>
+:root{--bg:#f4f5fa;--cd:#fff;--tx:#14161f;--mu:#6b7280;--bd:#e3e5ee;--ac:#5b6cff;--g:#16a34a;--a:#d97706;--r:#dc2626;--n:#9ca3af;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1017;--cd:#171a24;--tx:#e8eaf2;--mu:#9097a8;--bd:#272b38;--ac:#8c97ff;--g:#34d399;--a:#fbbf24;--r:#f87171}}
+:root[data-theme="dark"]{--bg:#0e1017;--cd:#171a24;--tx:#e8eaf2;--mu:#9097a8;--bd:#272b38;--ac:#8c97ff;--g:#34d399;--a:#fbbf24;--r:#f87171}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:12px}
+h1{font-size:20px;margin:4px 0}h2{font-size:16px;margin:0 0 6px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));margin-top:12px}
+.cd{background:var(--cd);border:1px solid var(--bd);border-radius:14px;padding:14px;min-width:0}
+.mu{color:var(--mu);font-size:13px}.big{font-size:34px;font-weight:700}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 6px;border-radius:8px;cursor:pointer;border-bottom:1px solid var(--bd)}
+.row.on{background:color-mix(in srgb,var(--ac) 12%,transparent)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;background:var(--n)}
+.g{background:var(--g)}.a{background:var(--a)}.r{background:var(--r)}
+.tg{color:var(--g)}.tr{color:var(--r)}
+button,input{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:6px 10px;cursor:pointer}
+button.on{background:var(--ac);color:#fff;border-color:var(--ac)}input{width:110px;cursor:text}
+.al{padding:8px 10px;border-left:4px solid var(--r);background:color-mix(in srgb,var(--r) 10%,transparent);border-radius:6px;margin:6px 0}
+.er{padding:8px 10px;border-left:4px solid var(--a);background:color-mix(in srgb,var(--a) 10%,transparent);border-radius:6px;margin:6px 0;font-size:13px;word-break:break-word}
+pre{white-space:pre-wrap;font:13px/1.5 ui-monospace,Menlo,monospace;margin:0;max-height:300px;overflow:auto}
+svg{width:100%;height:auto;display:block}summary{cursor:pointer;font-weight:600}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:8px 0;z-index:5;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+</style></head><body><main id="app"><div class="cd">Loading data…</div></main>
+<script>
+const $=id=>document.getElementById(id);
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let CAT,H,M={},D={},range=30,sel={},ov=LS.get('ov',{}),T;
+const pts={g:1,a:.5,r:0},avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const dd=(d,n)=>new Date(Date.parse(d)+n*864e5).toISOString().slice(0,10);
+const fmt=(m,v)=>m.p+v.toLocaleString(undefined,{minimumFractionDigits:m.d,maximumFractionDigits:m.d})+(m.s?(m.s.length>1&&m.s!=='M ETH'?m.s:m.s):'');
+const lab=d=>new Date(d+'T00:00:00Z').toLocaleDateString(undefined,{month:'short',day:'numeric',timeZone:'UTC'});
+const lastv=m=>D[m.id].at(-1)?.[1];
+const thr=m=>ov[m.id]??m.val;
+function win(s,end){const a=s.filter(([d])=>d<=end&&d>dd(end,-7)).map(x=>x[1]);return a.length?avg(a):null}
+function sig(m,end){const s=D[m.id].filter(([d])=>d<=end);if(s.length<2)return null;
+ const nw=win(s,end);let od=win(s,dd(end,-30));if(od==null)od=win(s,dd(end,-7));if(nw==null||od==null)return null;
+ const v=s.map(x=>x[1]),sc=Math.max(Math.abs(od),(Math.max(...v)-Math.min(...v))*.1)||1,p=(nw-od)/sc*m.gd;return p>.02?'g':p<-.02?'r':'a'}
+const score=(ms,end)=>{const v=ms.map(m=>sig(m,end)).filter(Boolean);return v.length?Math.round(100*avg(v.map(x=>pts[x]))):null};
+function chg(m,n){const s=D[m.id];if(m.id==='i1'||s.length<2)return null;const o=[...s].reverse().find(([d])=>d<=dd(T,-n));if(!o||!o[1])return null;return(s.at(-1)[1]/o[1]-1)*100}
+function alerts(){return CAT.metrics.filter(m=>m.op&&lastv(m)!=null&&(m.op==='<'?lastv(m)<thr(m):lastv(m)>thr(m)))}
+function chart(s,col='var(--ac)'){if(s.length<2)return'<div class="mu" style="padding:24px 0">History is still building — a chart appears after the 2nd daily update.</div>';
+ const W=320,H2=100,t0=Date.parse(s[0][0]),t1=Date.parse(s.at(-1)[0])||t0+1,v=s.map(x=>x[1]),mn=Math.min(...v),mx=Math.max(...v),sp=(mx-mn)||1;
+ const p=s.map(([d,y])=>[(Date.parse(d)-t0)/(t1-t0)*W,H2-6-(y-mn)/sp*(H2-14)]);const l=p.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join('');
+ return`<svg viewBox="0 0 ${W} ${H2}"><path d="${l}L${W} ${H2}L0 ${H2}Z" fill="${col}" opacity=".12"/><path d="${l}" fill="none" stroke="${col}" stroke-width="2"/></svg>`}
+function report(sc,cnt,al){const L=[`ETH THESIS BRIEF — ${T}`,sc==null?'Score: building history':`Score ${sc}/100 · ${cnt.g} green / ${cnt.a} amber / ${cnt.r} red`,'',al.length?'ALERTS: '+al.map(m=>m.name).join('; '):'ALERTS: none',''];
+ CAT.mods.forEach(k=>{const ms=CAT.metrics.filter(m=>m.mod===k.id);L.push(`${k.icon} ${k.name}`);ms.forEach(m=>{const v=lastv(m);if(v==null){L.push(` - ${m.name}: no data yet`);return}
+  const a=chg(m,1),w=chg(m,7);L.push(` - ${m.name}: ${fmt(m,v)}${w==null?'':` (1d ${a==null?'n/a':(a>=0?'+':'')+a.toFixed(1)+'%'}, 7d ${(w>=0?'+':'')+w.toFixed(1)}%)`}`)})});
+ const p=lastv(M.p1);if(p)L.push('',`ETH $${p.toLocaleString(undefined,{maximumFractionDigits:0})} — needs ×${(25000/p).toFixed(1)} for $25k, ×${(50000/p).toFixed(1)} for $50k`);return L.join('\n')}
+function render(){
+ const ms=CAT.metrics.filter(m=>m.mod!=='ctx'),sc=score(ms,T),al=alerts(),cnt={g:0,a:0,r:0};ms.forEach(m=>{const s=sig(m,T);if(s)cnt[s]++});
+ const hist=Array.from({length:30},(_,i)=>[dd(T,i-29),score(ms,dd(T,i-29))]).filter(x=>x[1]!=null);
+ const p=lastv(M.p1),er=Object.entries(H.errors||{});
+ $('app').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px"><div><h1>🧭 ETH Thesis Monitor</h1><div class="mu">Tom Lee $25k–$50k thesis · data as of ${lab(T)}</div></div></div>
+ <div class="bar"><span class="mu">Range</span>${[7,30,90,0].map(n=>`<button class="${n==range?'on':''}" onclick="range=${n};render()">${n||'All'}${n?'d':''}</button>`).join(' ')}<button onclick="th()" style="margin-left:auto">◐ Theme</button></div>
+ <div class="grid">
+ <div class="cd"><h2>Thesis score</h2><div class="big">${sc==null?'–':sc}<span class="mu">/100</span></div><div class="mu"><span class="dot g"></span>${cnt.g} <span class="dot a"></span>${cnt.a} <span class="dot r"></span>${cnt.r} signals (30d trend)</div>${chart(hist)}<div class="mu">Score history</div></div>
+ <div class="cd"><h2>ETH vs thesis</h2>${p?`<div class="big">$${p.toLocaleString(undefined,{maximumFractionDigits:0})}</div><div class="mu">${(p/25000*100).toFixed(1)}% of $25k · ${(p/50000*100).toFixed(1)}% of $50k</div>${chart(D.p1.slice(range?-range:0))}`:'<div class="mu">No price yet.</div>'}</div>
+ <div class="cd"><h2>🚨 Alerts (${al.length})</h2>${al.length?al.map(m=>`<div class="al"><b>${m.name}</b>: ${fmt(m,lastv(m))} is ${m.op==='<'?'below':'above'} ${fmt(m,thr(m))}</div>`).join(''):'<div class="mu">All clear.</div>'}</div>
+ <div class="cd"><h2>📰 Daily report</h2><pre id="rp">${report(sc,cnt,al)}</pre><p><button onclick="try{navigator.clipboard.writeText($('rp').textContent)}catch(e){}">Copy</button></p></div></div>
+ ${er.length?`<div class="cd" style="margin-top:12px"><h2>⚠️ Data sources with problems</h2>${er.map(([k,v])=>`<div class="er"><b>${k}</b>: ${v}</div>`).join('')}</div>`:''}
+ <div class="grid">${CAT.mods.map(k=>{const mm=CAT.metrics.filter(m=>m.mod===k.id);sel[k.id]=sel[k.id]||mm[0].id;const cur=M[sel[k.id]],s=D[cur.id].slice(range?-range:0),ss=score(mm,T),c=ss==null?'':ss>=65?'g':ss>=40?'a':'r';
+ return`<div class="cd"><h2><span class="dot ${c}"></span>${k.icon} ${k.name} <span class="mu">· ${ss==null?'–':ss}</span></h2><div class="mu">${k.sub}</div>
+ ${mm.map(m=>{const v=lastv(m),x=chg(m,30),lp=D[m.id].at(-1)?.[0],stale=lp&&lp<dd(T,-3);return`<div class="row ${m.id===sel[k.id]?'on':''}" onclick="sel['${k.id}']='${m.id}';render()"><span><span class="dot ${sig(m,T)||''}"></span>${m.name}</span><b>${v==null?'<span class="mu">no data</span>':fmt(m,v)+(x==null?'':` <small class="${x*m.gd>=0?'tg':'tr'}">${x>=0?'+':''}${x.toFixed(1)}%</small>`)}${stale?` <small class="mu">${lab(lp)}</small>`:''}</b></div>`}).join('')}
+ <div style="margin-top:8px">${chart(s)}<div class="mu" style="display:flex;justify-content:space-between;gap:6px"><span>${s[0]?lab(s[0][0]):''}</span><span style="text-align:center">${cur.name} · ${cur.src}</span><span>${s.length?lab(s.at(-1)[0]):''}</span></div></div></div>`}).join('')}</div>
+ <div class="grid"><div class="cd" style="grid-column:1/-1"><details><summary>⚙️ Alert thresholds (saved on this device)</summary><div style="margin-top:8px">${CAT.metrics.filter(m=>m.op).map(m=>`<div class="row" style="cursor:default"><span>${m.name} <span class="mu">alert if ${m.op}</span></span><input type="number" step="any" value="${thr(m)}" onchange="ov['${m.id}']=+this.value;LS.set('ov',ov);render()"></div>`).join('')}<p><button onclick="ov={};LS.set('ov',ov);render()">Reset thresholds</button></p></div></details></div></div>
+ <p class="mu">Not investment advice. Updated ${H.updated?new Date(H.updated).toLocaleString():'never'}.</p>`}
+function th(){const r=document.documentElement,d=matchMedia('(prefers-color-scheme:dark)').matches,c=r.dataset.theme||(d?'dark':'light');r.dataset.theme=c==='dark'?'light':'dark'}
+(async()=>{try{const f=u=>fetch(u+'?t='+Date.now()).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()});
+ [CAT,H]=await Promise.all([f('data/metrics.json'),f('data/history.json')]);
+ CAT.metrics.forEach(m=>{M[m.id]=m;D[m.id]=(H.metrics[m.id]||[]).map(([d,v])=>[d,v/(m.div||1)])});
+ T=(H.updated||new Date().toISOString()).slice(0,10);render()}
+ catch(e){$('app').innerHTML='<div class="cd"><h2>Could not load data</h2><p class="mu">This page must be served over http(s), e.g. GitHub Pages. Opening the file directly will not work. ('+e.message+')</p></div>'}})();
+</script></body></html>
